@@ -172,9 +172,12 @@ myKeys conf = M.fromList $
     , ((myModMask              , xK_Up        ), windows S.swapUp)
     , ((myModMask              , xK_Left      ), sendMessage Shrink)
     , ((myModMask              , xK_Right     ), sendMessage Expand)
-    , ((myModMask              , xK_t         ), withFocused $ windows . S.sink)
+    , ((myModMask              , xK_u         ), withFocused $ windows . S.sink)
     , ((myModMask              , xK_w         ), sendMessage (IncMasterN 1))
     , ((myModMask              , xK_v         ), sendMessage (IncMasterN (-1)))
+    -- Application commands
+    , ((myModMask              , xK_f         ), spawn "firefox -p -no-remote")
+    , ((myModMask              , xK_g         ), spawn "google-chrome --incognito")
     -- Shutdown commands
     , ((myModMask              , xK_q         ), restart "xmonad" True)
     , ((myModMask              , xK_h         ), spawn "gksudo pm-hibernate")
@@ -201,9 +204,9 @@ myKeys conf = M.fromList $
     , ((altMask .|. controlMask .|. shiftMask, xK_Right     ), swapNextScreen)
     , ((myModMask              , xK_z         ), windowCenter)
     -- Tagging Windows
-    , ((myModMask              ,   xK_g  ), tagPrompt defaultXPConfig (withFocused . addTag))
-    , ((myModMask .|. shiftMask,   xK_g  ), tagDelPrompt defaultXPConfig)
-    , ((altMask                ,   xK_g  ), tagPrompt defaultXPConfig (`withTaggedGlobalP` gotoWindow))
+    , ((myModMask              ,   xK_t  ), tagPrompt defaultXPConfig (withFocused . addTag))
+    , ((myModMask .|. shiftMask,   xK_t  ), tagDelPrompt defaultXPConfig)
+    , ((altMask                ,   xK_t  ), tagPrompt defaultXPConfig (`withTaggedGlobalP` gotoWindow))
     ] ++
     -- Alt+F1..F10 switches to workspace
     -- mod+F1..F10 moves window to workspace
