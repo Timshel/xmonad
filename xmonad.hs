@@ -1,9 +1,9 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances, FlexibleContexts, NoMonomorphismRestriction #-}
- 
+
 
 -- XMonad configuration file by Thomas ten Cate <ttencate@gmail.com>
 -- Edited and extended by Robert Massaioli <robertmassaioli@gmail.com>
--- 
+--
 -- Works on whatever XMonad that I happen to be running, usually the latest one.
 -- You will need xmonad-contrib and maybe more.
 --
@@ -11,7 +11,7 @@
 --
 -- WARNING: On my computers I swap CapsLock and BackSpace around so if you don't then you will need
 -- to swap those around in this config.
- 
+
 import XMonad
 import XMonad.Util.EZConfig
 import qualified XMonad.StackSet as S
@@ -37,7 +37,7 @@ import Data.Ratio
 import qualified Data.Map as M
 import XMonad.Util.Run
 import XMonad.Util.Dmenu
-import XMonad.Util.Dzen 
+import XMonad.Util.Dzen
 import XMonad.Hooks.DynamicLog (dynamicLogXinerama, xmobar)
 import XMonad.Actions.FindEmptyWorkspace
 import XMonad.Layout.IndependentScreens
@@ -56,23 +56,23 @@ import XMonad.Hooks.ManageHelpers (isFullscreen, doFullFloat)
 -- defaults on which we build
 -- use e.g. defaultConfig or gnomeConfig
 myBaseConfig = xfceConfig
- 
+
 -- display
 -- replace the bright red border with a more stylish colour
 myBorderWidth = 2
 myNormalBorderColor = "white"
 myFocusedBorderColor = "purple"
- 
+
 -- workspaces
 myWorkspaces = map show [1..12]
- 
+
 -- layouts
-basicLayout = Tall nmaster delta ratio 
+basicLayout = Tall nmaster delta ratio
   where
     nmaster = 1
     delta   = 3 / 100
     ratio   = 1 / 2
-threeCol = ThreeCol nmaster delta ratio 
+threeCol = ThreeCol nmaster delta ratio
   where
     nmaster = 1
     delta   = 3 / 100
@@ -82,23 +82,23 @@ threeLayout = named "three" . avoidStruts $ threeCol
 wideLayout = named "wide" . avoidStruts $ Mirror basicLayout
 singleLayout = named "single" . avoidStruts $ noBorders Full
 fullscreenLayout = named "fullscreen" $ noBorders Full
-imLayout = avoidStruts . reflectHoriz $ withIMs ratio rosters chatLayout 
+imLayout = avoidStruts . reflectHoriz $ withIMs ratio rosters chatLayout
   where
     chatLayout      = Grid
     ratio           = 1 % 6
     rosters         = [skypeRoster, pidginRoster]
     pidginRoster    = And (ClassName "Pidgin") (Role "buddy_list")
-    skypeRoster     = ClassName "Skype" `And` 
-                      Not (Title "Options") `And` 
-                      Not (Role "Chats") `And` 
+    skypeRoster     = ClassName "Skype" `And`
+                      Not (Title "Options") `And`
+                      Not (Role "Chats") `And`
                       Not (Role "CallWindowForm")
- 
-myLayoutHook screens = fullscreen $ im normal 
+
+myLayoutHook screens = fullscreen $ im normal
   where
     normal     = tallLayout ||| threeLayout ||| wideLayout ||| singleLayout
     fullscreen = onWorkspaces (withScreens screens ["11"]) fullscreenLayout
     im         = onWorkspace "im" imLayout
- 
+
 -- special treatment for specific windows:
 myManageHook = composeAll userDefinedHooks <+> manageHook myBaseConfig
    where
@@ -133,18 +133,18 @@ myManageHook = composeAll userDefinedHooks <+> manageHook myBaseConfig
          window <- ask
          liftX . sequence . fmap (flip addTag window) $ ts
          idHook
- 
+
 -- Mod4 is the Super / Windows key
 -- alt, is well...alt
 myModMask = mod4Mask
 altMask   = mod1Mask
- 
+
 {-
  - Default Spawn Commands
  - Update these using update alternatives as in:
  -    $ update-alternatives --config x-www-browser
  -}
-myBrowser = "x-www-browser"   
+myBrowser = "x-www-browser"
 myTerminal = "x-terminal-emulator"
 
 -- choose which menu runs
@@ -157,9 +157,11 @@ myKeys conf = M.fromList $
     , ((myModMask              , xK_x         ), spawn myBrowser)
     , ((myModMask              , xK_r         ), runMenu)
     , ((myModMask              , xK_c         ), kill)
-    -- Empty Workspace Movement
+    -- Workspace Movement
     , ((altMask                , xK_space     ), viewEmptyWorkspace)
     , ((altMask .|. shiftMask  , xK_space     ), tagToEmptyWorkspace)
+    , ((myModMask              , xK_Tab       ), nextWS)
+    , ((myModMask .|. shiftMask, xK_Tab       ), prevWS)
     -- Layout Commands
     , ((myModMask              , xK_space     ), sendMessage NextLayout)
     , ((altMask .|. shiftMask  , xK_Return    ), sendMessage FirstLayout)
@@ -207,20 +209,8 @@ myKeys conf = M.fromList $
     , ((myModMask              ,   xK_t  ), tagPrompt defaultXPConfig (withFocused . addTag))
     , ((myModMask .|. shiftMask,   xK_t  ), tagDelPrompt defaultXPConfig)
     , ((altMask                ,   xK_t  ), tagPrompt defaultXPConfig (`withTaggedGlobalP` gotoWindow))
-    ] ++
-    -- Alt+F1..F10 switches to workspace
-    -- mod+F1..F10 moves window to workspace
-    -- (Alt is in a nicer location for the thumb than the Windows key,
-    -- and 1..9 keys are already in use by Firefox, irssi, ...)
-    [ ((m, k), f i)
-        | (i, k) <- zip (workspaces' conf) workspaceKeys
-        , (f, m) <- [(windowsGreedyView, altMask), (windowsShift, myModMask)]
-    ] ++
-    -- mod+alt+F1..F10 moves window to workspace and switches to that workspace
-    [ ((myModMask .|. altMask, k), windowsShift i >> windowsGreedyView i >> windowCenter) 
-        | (i, k) <- zip (workspaces' conf) workspaceKeys
     ]
-    where 
+    where
         workspaceKeys = [xK_F1 .. xK_F12]
         windowsShift      = windows . onCurrentScreen S.shift
         windowsGreedyView = windows . onCurrentScreen S.greedyView
@@ -233,7 +223,7 @@ myKeys conf = M.fromList $
             where
                screenIdFromTag :: WorkspaceId -> ScreenId
                screenIdFromTag = S . read . takeWhile (/= '_')
- 
+
 -- mouse bindings that mimic Gnome's
 myMouseBindings (XConfig {XMonad.modMask = modMask}) = M.fromList
     [ ((altMask, button1), \w -> focus w >> mouseMoveWindow w)
@@ -242,14 +232,12 @@ myMouseBindings (XConfig {XMonad.modMask = modMask}) = M.fromList
     , ((altMask, button4), const $ windows S.swapUp)
     , ((altMask, button5), const $ windows S.swapDown)
     ]
- 
+
 -- put it all together
 main = do
-    nScreens <- countScreens    -- just in case you are on a laptop like me 
+    nScreens <- countScreens    -- just in case you are on a laptop like me
     xmonad =<< xmobar myBaseConfig
       { modMask = myModMask
-      , workspaces = withScreens nScreens myWorkspaces
-      , startupHook = setWMName "LG3D"
       , layoutHook = myLayoutHook nScreens
       , manageHook = myManageHook
       , borderWidth = myBorderWidth
@@ -257,37 +245,36 @@ main = do
       , focusedBorderColor = myFocusedBorderColor
       , keys = myKeys
       , mouseBindings = myMouseBindings
-      , logHook = myLogHook
       }
     where
         myLogHook = takeTopFocus
- 
+
 -- modified version of XMonad.Layout.IM --
- 
+
 -- | Data type for LayoutModifier which converts given layout to IM-layout
 -- (with dedicated space for the roster and original layout for chat windows)
-data AddRosters a = AddRosters Rational [Property] 
+data AddRosters a = AddRosters Rational [Property]
                     deriving (Read, Show)
- 
+
 instance LayoutModifier AddRosters Window where
   modifyLayout (AddRosters ratio props) = applyIMs ratio props
   modifierDescription _                = "IMs"
- 
+
 -- | Modifier which converts given layout to IMs-layout (with dedicated
 -- space for rosters and original layout for chat windows)
 withIMs :: LayoutClass l a => Rational -> [Property] -> l a -> ModifiedLayout AddRosters l a
 withIMs ratio props = ModifiedLayout $ AddRosters ratio props
- 
+
 -- | IM layout modifier applied to the Grid layout
 gridIMs :: Rational -> [Property] -> ModifiedLayout AddRosters Grid a
 gridIMs ratio props = withIMs ratio props Grid
- 
+
 hasAnyProperty :: [Property] -> Window -> X Bool
 hasAnyProperty [] _ = return False
 hasAnyProperty (p:ps) w = do
     b <- hasProperty p w
     if b then return True else hasAnyProperty ps w
- 
+
 -- | Internal function for placing the rosters specified by
 -- the properties and running original layout for all chat windows
 applyIMs :: (LayoutClass l Window) =>
