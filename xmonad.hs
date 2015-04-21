@@ -38,7 +38,6 @@ import qualified Data.Map as M
 import XMonad.Util.Run
 import XMonad.Util.Dmenu
 import XMonad.Util.Dzen
-import XMonad.Hooks.DynamicLog (dynamicLogXinerama, xmobar)
 import XMonad.Actions.FindEmptyWorkspace
 import XMonad.Layout.IndependentScreens
 import XMonad.Actions.Warp
@@ -53,10 +52,6 @@ import Data.Maybe (fromMaybe)
 
 import XMonad.Hooks.ManageHelpers (isFullscreen, doFullFloat)
 
--- defaults on which we build
--- use e.g. defaultConfig or gnomeConfig
-myBaseConfig = xfceConfig
-
 -- display
 -- replace the bright red border with a more stylish colour
 myBorderWidth = 2
@@ -64,7 +59,7 @@ myNormalBorderColor = "white"
 myFocusedBorderColor = "purple"
 
 -- workspaces
-myWorkspaces = map show [1..12]
+myWorkspaces = map show [1..9]
 
 -- layouts
 basicLayout = Tall nmaster delta ratio
@@ -72,67 +67,19 @@ basicLayout = Tall nmaster delta ratio
     nmaster = 1
     delta   = 3 / 100
     ratio   = 1 / 2
+
 threeCol = ThreeCol nmaster delta ratio
   where
     nmaster = 1
     delta   = 3 / 100
     ratio   = 1 / 3
-tallLayout = named "tall" . avoidStruts $ basicLayout
-threeLayout = named "three" . avoidStruts $ threeCol
-wideLayout = named "wide" . avoidStruts $ Mirror basicLayout
-singleLayout = named "single" . avoidStruts $ noBorders Full
-fullscreenLayout = named "fullscreen" $ noBorders Full
-imLayout = avoidStruts . reflectHoriz $ withIMs ratio rosters chatLayout
-  where
-    chatLayout      = Grid
-    ratio           = 1 % 6
-    rosters         = [skypeRoster, pidginRoster]
-    pidginRoster    = And (ClassName "Pidgin") (Role "buddy_list")
-    skypeRoster     = ClassName "Skype" `And`
-                      Not (Title "Options") `And`
-                      Not (Role "Chats") `And`
-                      Not (Role "CallWindowForm")
 
-myLayoutHook screens = fullscreen $ im normal
-  where
-    normal     = tallLayout ||| threeLayout ||| wideLayout ||| singleLayout
-    fullscreen = onWorkspaces (withScreens screens ["11"]) fullscreenLayout
-    im         = onWorkspace "im" imLayout
+tallLayout    = named "tall" . avoidStruts $ basicLayout
+threeLayout   = named "three" . avoidStruts $ threeCol
+wideLayout    = named "wide" . avoidStruts $ Mirror basicLayout
+singleLayout  = named "single" . avoidStruts $ noBorders Full
 
--- special treatment for specific windows:
-myManageHook = composeAll userDefinedHooks <+> manageHook myBaseConfig
-   where
-      userDefinedHooks =
-         [ webBrowserHook
-         , fileBrowserHook
-         , terminalHook
-         , imClientHook
-         , allowFullscreenHook
-         ]
-
-      isTerminal = isApplicationGroup ["xfce4-terminal"]
-      isIM     = isApplicationGroup ["Pidgin", "Skype"]
-      isWebBrowser = isApplicationGroup ["X-www-browser", "Google-chrome", "Firefox"]
-      isFileBrowser = isApplicationGroup ["Nautilus"]
-      isEclipse = isApplicationGroup ["Eclipse"]
-
-      isApplicationGroup :: [String] -> Query Bool
-      isApplicationGroup = foldr1 (<||>) . map (className =?)
-
-      imClientHook = isIM --> addTagsHook ["im_client"]
-      terminalHook = isTerminal --> addTagsHook ["terminal"]
-      webBrowserHook = isWebBrowser --> addTagsHook ["browser"]
-      fileBrowserHook = isFileBrowser --> addTagsHook ["file_browser"]
-      eclipseHook = isEclipse --> addTagsHook ["eclipse"]
-
-      -- this will allow anything that says it is fullscreen to go fullscreen: like youtube videos
-      allowFullscreenHook = isFullscreen --> doFullFloat
-
-      addTagsHook :: [String] -> ManageHook
-      addTagsHook ts = do
-         window <- ask
-         liftX . sequence . fmap (flip addTag window) $ ts
-         idHook
+myLayoutHook  = tallLayout ||| threeLayout ||| wideLayout ||| singleLayout
 
 -- Mod4 is the Super / Windows key
 -- alt, is well...alt
@@ -167,9 +114,11 @@ myKeys conf = M.fromList $
     , ((altMask .|. shiftMask  , xK_Return    ), sendMessage FirstLayout)
     , ((myModMask              , xK_n         ), refresh)
     , ((myModMask              , xK_m         ), windows S.swapMaster)
+
     -- controlling window movement, position and location
     , ((altMask                , xK_Tab       ), windows S.focusDown >> windowCenter)
-    , ((altMask                , xK_BackSpace ), windows S.focusUp >> windowCenter)
+    , ((altMask .|. shiftMask  , xK_Tab       ), windows S.focusUp >> windowCenter)
+
     , ((myModMask              , xK_Down      ), windows S.swapDown)
     , ((myModMask              , xK_Up        ), windows S.swapUp)
     , ((myModMask              , xK_Left      ), sendMessage Shrink)
@@ -183,8 +132,8 @@ myKeys conf = M.fromList $
     -- Shutdown commands
     , ((myModMask              , xK_q         ), restart "xmonad" True)
     , ((myModMask              , xK_h         ), spawn "gksudo pm-hibernate")
-    , ((myModMask .|. shiftMask, xK_q         ), spawn "gksudo shutdown -P now")
-    , ((myModMask .|. shiftMask, xK_w         ), spawn "gnome-screensaver-command -l")
+    , ((myModMask .|. shiftMask, xK_q         ), spawn "gksudo lshutdown -P now")
+    , ((myModMask              , xK_l         ), spawn "xflock4")
     -- Print Scree    , ((myModMask              , xK_Print     ), spawn "gnome-screenshot")
     , ((altMask                , xK_Print     ), spawn "gnome-screenshot -a")
     -- MPC and Volume commands
@@ -193,11 +142,14 @@ myKeys conf = M.fromList $
     , ((myModMask               , xK_Pause), spawn "mpc toggle")
     , ((myModMask               , xK_Home), spawn "amixer -c0 -- sset Master Playback 2dB+")
     , ((myModMask               , xK_End), spawn "amixer -c0 -- sset Master Playback 2dB-")
+
     -- Screen Movement
     , ((controlMask              , xK_Tab       ), nextScreen >> windowCenter)
     , ((controlMask .|. shiftMask, xK_Tab       ), prevScreen >> windowCenter)
+
     , ((altMask .|. controlMask, xK_Left       ), prevScreen >> windowCenter)
     , ((altMask .|. controlMask, xK_Right      ), nextScreen >> windowCenter)
+
     , ((altMask .|. controlMask, xK_Down       ), shiftPrevScreen)
     , ((altMask .|. controlMask, xK_Up         ), shiftNextScreen)
     , ((altMask .|. controlMask .|. shiftMask, xK_Down       ), shiftPrevScreen >> prevScreen >> windowCenter)
@@ -209,9 +161,16 @@ myKeys conf = M.fromList $
     , ((myModMask              ,   xK_t  ), tagPrompt defaultXPConfig (withFocused . addTag))
     , ((myModMask .|. shiftMask,   xK_t  ), tagDelPrompt defaultXPConfig)
     , ((altMask                ,   xK_t  ), tagPrompt defaultXPConfig (`withTaggedGlobalP` gotoWindow))
+    ] ++ [
+      ((myModMask              , key), (windows $ S.greedyView ws) ) | (ws, key) <- workspaceKeys
+    ] ++ [
+      ((altMask                , key), (windows $ S.shift ws)) | (ws, key) <- workspaceKeys
+    ] ++ [
+      ((myModMask .|. altMask  , key), (windows $ S.shift ws) >> (windows $ S.greedyView ws) >> windowCenter)
+      | (ws, key) <- workspaceKeys
     ]
     where
-        workspaceKeys = [xK_F1 .. xK_F12]
+        workspaceKeys     = zip myWorkspaces [xK_F1 .. xK_F9]
         windowsShift      = windows . onCurrentScreen S.shift
         windowsGreedyView = windows . onCurrentScreen S.greedyView
         windowCenter = warpToWindow (1 % 6) (1 % 6)
@@ -234,62 +193,13 @@ myMouseBindings (XConfig {XMonad.modMask = modMask}) = M.fromList
     ]
 
 -- put it all together
-main = do
-    nScreens <- countScreens    -- just in case you are on a laptop like me
-    xmonad =<< xmobar myBaseConfig
-      { modMask = myModMask
-      , layoutHook = myLayoutHook nScreens
-      , manageHook = myManageHook
-      , borderWidth = myBorderWidth
-      , normalBorderColor = myNormalBorderColor
-      , focusedBorderColor = myFocusedBorderColor
-      , keys = myKeys
-      , mouseBindings = myMouseBindings
-      }
-    where
-        myLogHook = takeTopFocus
-
--- modified version of XMonad.Layout.IM --
-
--- | Data type for LayoutModifier which converts given layout to IM-layout
--- (with dedicated space for the roster and original layout for chat windows)
-data AddRosters a = AddRosters Rational [Property]
-                    deriving (Read, Show)
-
-instance LayoutModifier AddRosters Window where
-  modifyLayout (AddRosters ratio props) = applyIMs ratio props
-  modifierDescription _                = "IMs"
-
--- | Modifier which converts given layout to IMs-layout (with dedicated
--- space for rosters and original layout for chat windows)
-withIMs :: LayoutClass l a => Rational -> [Property] -> l a -> ModifiedLayout AddRosters l a
-withIMs ratio props = ModifiedLayout $ AddRosters ratio props
-
--- | IM layout modifier applied to the Grid layout
-gridIMs :: Rational -> [Property] -> ModifiedLayout AddRosters Grid a
-gridIMs ratio props = withIMs ratio props Grid
-
-hasAnyProperty :: [Property] -> Window -> X Bool
-hasAnyProperty [] _ = return False
-hasAnyProperty (p:ps) w = do
-    b <- hasProperty p w
-    if b then return True else hasAnyProperty ps w
-
--- | Internal function for placing the rosters specified by
--- the properties and running original layout for all chat windows
-applyIMs :: (LayoutClass l Window) =>
-               Rational
-            -> [Property]
-            -> S.Workspace WorkspaceId (l Window) Window
-            -> Rectangle
-            -> X ([(Window, Rectangle)], Maybe (l Window))
-applyIMs ratio props wksp rect = do
-    let stack = S.stack wksp
-    let ws = S.integrate' stack
-    rosters <- filterM (hasAnyProperty props) ws
-    let n = fromIntegral $ length rosters
-    let (rostersRect, chatsRect) = splitHorizontallyBy (n * ratio) rect
-    let rosterRects = splitHorizontally n rostersRect
-    let filteredStack = stack >>= S.filter (`notElem` rosters)
-    (a,b) <- runLayout (wksp {S.stack = filteredStack}) chatsRect
-    return (zip rosters rosterRects ++ a, b)
+main = xmonad $ xfceConfig
+  { modMask             = myModMask
+  , workspaces          = myWorkspaces
+  , layoutHook          = myLayoutHook
+  , borderWidth         = myBorderWidth
+  , normalBorderColor   = myNormalBorderColor
+  , focusedBorderColor  = myFocusedBorderColor
+  , keys                = myKeys
+  , mouseBindings       = myMouseBindings
+  }
