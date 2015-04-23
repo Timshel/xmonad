@@ -68,18 +68,14 @@ basicLayout = Tall nmaster delta ratio
     delta   = 3 / 100
     ratio   = 1 / 2
 
-threeCol = ThreeCol nmaster delta ratio
-  where
-    nmaster = 1
-    delta   = 3 / 100
-    ratio   = 1 / 3
-
 tallLayout    = named "tall" . avoidStruts $ basicLayout
-threeLayout   = named "three" . avoidStruts $ threeCol
 wideLayout    = named "wide" . avoidStruts $ Mirror basicLayout
+
+threeLayout   = named "three" . avoidStruts $ ThreeCol 1 (3/100) (1/3)
+threMidLayout = named "threeMid" . avoidStruts $ ThreeColMid 2 (3/100) (1/3)
 singleLayout  = named "single" . avoidStruts $ noBorders Full
 
-myLayoutHook  = tallLayout ||| threeLayout ||| wideLayout ||| singleLayout
+myLayoutHook  = threeLayout ||| threMidLayout ||| singleLayout
 
 -- Mod4 is the Super / Windows key
 -- alt, is well...alt
@@ -104,11 +100,13 @@ myKeys conf = M.fromList $
     , ((myModMask              , xK_x         ), spawn myBrowser)
     , ((myModMask              , xK_r         ), runMenu)
     , ((myModMask              , xK_c         ), kill)
+
     -- Workspace Movement
     , ((altMask                , xK_space     ), viewEmptyWorkspace)
     , ((altMask .|. shiftMask  , xK_space     ), tagToEmptyWorkspace)
     , ((myModMask              , xK_Tab       ), nextWS)
     , ((myModMask .|. shiftMask, xK_Tab       ), prevWS)
+
     -- Layout Commands
     , ((myModMask              , xK_space     ), sendMessage NextLayout)
     , ((altMask .|. shiftMask  , xK_Return    ), sendMessage FirstLayout)
@@ -126,22 +124,14 @@ myKeys conf = M.fromList $
     , ((myModMask              , xK_u         ), withFocused $ windows . S.sink)
     , ((myModMask              , xK_w         ), sendMessage (IncMasterN 1))
     , ((myModMask              , xK_v         ), sendMessage (IncMasterN (-1)))
+
     -- Application commands
     , ((myModMask              , xK_f         ), spawn "firefox -p -no-remote")
     , ((myModMask              , xK_g         ), spawn "google-chrome --incognito")
+
     -- Shutdown commands
     , ((myModMask              , xK_q         ), restart "xmonad" True)
-    , ((myModMask              , xK_h         ), spawn "gksudo pm-hibernate")
-    , ((myModMask .|. shiftMask, xK_q         ), spawn "gksudo lshutdown -P now")
     , ((myModMask              , xK_l         ), spawn "xflock4")
-    -- Print Scree    , ((myModMask              , xK_Print     ), spawn "gnome-screenshot")
-    , ((altMask                , xK_Print     ), spawn "gnome-screenshot -a")
-    -- MPC and Volume commands
-    , ((myModMask               , xK_Page_Up), spawn "mpc next")
-    , ((myModMask               , xK_Page_Down), spawn "mpc prev")
-    , ((myModMask               , xK_Pause), spawn "mpc toggle")
-    , ((myModMask               , xK_Home), spawn "amixer -c0 -- sset Master Playback 2dB+")
-    , ((myModMask               , xK_End), spawn "amixer -c0 -- sset Master Playback 2dB-")
 
     -- Screen Movement
     , ((controlMask              , xK_Tab       ), nextScreen >> windowCenter)
