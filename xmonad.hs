@@ -24,12 +24,15 @@ import XMonad.Hooks.ICCCMFocus
 import XMonad.Layout.Combo
 import XMonad.Layout.Grid
 import XMonad.Layout.ThreeColumns
+import XMonad.Layout.MultiColumns
 import XMonad.Layout.LayoutModifier
+import XMonad.Layout.Reflect
 import XMonad.Layout.Named
 import XMonad.Layout.NoBorders
 import XMonad.Layout.PerWorkspace
 import XMonad.Layout.Reflect
 import XMonad.Layout.TwoPane
+import XMonad.Layout.Master
 import XMonad.Layout.WindowNavigation
 import XMonad.Util.WindowProperties
 import Control.Monad
@@ -42,6 +45,7 @@ import XMonad.Actions.FindEmptyWorkspace
 import XMonad.Layout.IndependentScreens
 import XMonad.Actions.Warp
 import XMonad.Hooks.UrgencyHook
+import XMonad.Hooks.SetWMName
 import System.Exit
 
 import XMonad.Prompt
@@ -72,7 +76,7 @@ tallLayout    = named "tall" . avoidStruts $ basicLayout
 wideLayout    = named "wide" . avoidStruts $ Mirror basicLayout
 
 threeLayout   = named "three" . avoidStruts $ ThreeCol 1 (3/100) (1/3)
-threMidLayout = named "threeMid" . avoidStruts $ ThreeColMid 2 (3/100) (1/3)
+threMidLayout = named "threeMid" . avoidStruts $  multimastered 2 (3/100) (1/3) $ Mirror $ multiCol [1] 1 (3/100) (1/2)
 singleLayout  = named "single" . avoidStruts $ noBorders Full
 
 myLayoutHook  = threeLayout ||| threMidLayout ||| singleLayout
@@ -192,4 +196,5 @@ main = xmonad $ xfceConfig
   , focusedBorderColor  = myFocusedBorderColor
   , keys                = myKeys
   , mouseBindings       = myMouseBindings
+  , startupHook         = setWMName "LG3D"
   }
